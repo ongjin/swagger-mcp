@@ -42,7 +42,7 @@ Test APIs and generate cURL commands.
 | `swagger_test` | **Execute actual HTTP request** |
 | `swagger_curl` | **Generate cURL command** |
 
-### 🛠️ Code Generation
+### 🛠️ [Code Generation](./code-generation)
 
 Generate code from API specifications.
 

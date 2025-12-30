@@ -15,8 +15,10 @@ export default defineConfig({
     base: "/swagger-mcp/",
 
     head: [
-        ["link", { rel: "icon", href: "/swagger-mcp/favicon.ico" }],
-        ["meta", { name: "theme-color", content: "#646cff" }],
+        ["link", { rel: "icon", type: "image/svg+xml", href: "/swagger-mcp/favicon.svg" }],
+        ["link", { rel: "icon", type: "image/png", href: "/swagger-mcp/favicon.png" }],
+        ["link", { rel: "icon", type: "image/x-icon", href: "/swagger-mcp/favicon.ico" }],
+        ["meta", { name: "theme-color", content: "#85EA2D" }],
         ["meta", { name: "og:type", content: "website" }],
         ["meta", { name: "og:site_name", content: "Swagger MCP Server" }],
     ],
@@ -106,6 +108,7 @@ export default defineConfig({
                                 { text: "API Discovery", link: "/tools/api-discovery" },
                                 { text: "Schema Inspection", link: "/tools/schema-inspection" },
                                 { text: "API Testing", link: "/tools/api-testing" },
+                                { text: "Code Generation", link: "/tools/code-generation" },
                             ],
                         },
                         {
@@ -163,6 +166,7 @@ export default defineConfig({
                                 { text: "API 탐색", link: "/ko/tools/api-discovery" },
                                 { text: "스키마 조회", link: "/ko/tools/schema-inspection" },
                                 { text: "API 테스트", link: "/ko/tools/api-testing" },
+                                { text: "코드 생성", link: "/ko/tools/code-generation" },
                             ],
                         },
                         {

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#85EA2D;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4CAF50;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="64" cy="64" r="60" fill="url(#grad1)" />
+
+  <!-- API bracket symbol { } -->
+  <g fill="white">
+    <!-- Left bracket { -->
+    <path d="M38 44 C38 44 32 44 32 52 L32 58 C32 62 28 64 28 64 C28 64 32 66 32 70 L32 76 C32 84 38 84 38 84"
+          stroke="white" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Right bracket } -->
+    <path d="M90 44 C90 44 96 44 96 52 L96 58 C96 62 100 64 100 64 C100 64 96 66 96 70 L96 76 C96 84 90 84 90 84"
+          stroke="white" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Plug/connector symbol in center -->
+  <g transform="translate(64, 64)">
+    <!-- Connector body -->
+    <rect x="-12" y="-8" width="24" height="16" rx="3" fill="url(#grad2)" />
+
+    <!-- Connection pins -->
+    <rect x="-7" y="-4" width="4" height="8" rx="1" fill="white" />
+    <rect x="3" y="-4" width="4" height="8" rx="1" fill="white" />
+
+    <!-- Connection indicator dots -->
+    <circle cx="-16" cy="0" r="3" fill="white" opacity="0.8"/>
+    <circle cx="16" cy="0" r="3" fill="white" opacity="0.8"/>
+  </g>
+</svg>
