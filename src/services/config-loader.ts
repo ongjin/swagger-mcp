@@ -14,7 +14,7 @@
  * @module services/config-loader
  */
 
-import { readFileSync, existsSync } from "fs";
+import { readFileSync, existsSync, statSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
 
@@ -74,7 +74,7 @@ export function getConfigSearchPaths(): string[] {
     if (explicitConfigPath) {
         // If it's a directory, append filename; if it's a file, use directly
         if (existsSync(explicitConfigPath)) {
-            const stats = require("fs").statSync(explicitConfigPath);
+            const stats = statSync(explicitConfigPath);
             if (stats.isDirectory()) {
                 paths.push(join(explicitConfigPath, CONFIG_FILE_NAME));
             } else {
