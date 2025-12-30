@@ -55,10 +55,10 @@ jobs:
         run: touch docs/.vitepress/dist/.nojekyll
 
       # Step 7: Setup GitHub Pages
+      # Note: GitHub Pages must be enabled manually in repo settings first
+      # Settings → Pages → Source: GitHub Actions
       - name: Setup Pages
         uses: actions/configure-pages@v4
-        with:
-          enablement: true
 
       # Step 8: Upload artifact
       - name: Upload artifact
