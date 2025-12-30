@@ -10,6 +10,8 @@ on:
   push:
     branches:
       - main
+    tags-ignore:  # 태그가 푸시될 때는 실행하지 않음
+      - '**'
   workflow_dispatch:
 
 permissions:
