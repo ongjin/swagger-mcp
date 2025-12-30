@@ -1,0 +1,414 @@
+# 🔌 Swagger MCP Server
+
+AI와 대화하며 Swagger/OpenAPI를 탐색하고, API를 직접 테스트하세요. Postman 없이 채팅만으로 API 개발이 가능합니다.
+
+[![npm version](https://img.shields.io/npm/v/@zerry_jin/swagger-mcp)](https://www.npmjs.com/package/@zerry_jin/swagger-mcp)
+[![npm downloads](https://img.shields.io/npm/dm/@zerry_jin/swagger-mcp)](https://www.npmjs.com/package/@zerry_jin/swagger-mcp)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://ongjin.github.io/swagger-mcp)
+![OpenAPI](https://img.shields.io/badge/OpenAPI-3.x-green)
+![Swagger](https://img.shields.io/badge/Swagger-2.0-green)
+![License](https://img.shields.io/badge/license-MIT-blue)
+![Node](https://img.shields.io/badge/node-%3E%3D18-green)
+
+**[한국어](#korean)** | **[📚 Documentation](https://ongjin.github.io/swagger-mcp)**
+
+---
+
+## Why?
+
+MSA 환경에서 여러 서비스의 API 문서를 오가며 개발하는 것은 번거롭습니다.
+
+이 MCP 서버를 사용하면:
+- 🔄 **서비스 전환이 자유로움** - 채팅으로 "payment 서버 연결해줘"
+- 🧪 **API 직접 테스트** - Postman 없이 채팅에서 바로 호출
+- 📋 **cURL 자동 생성** - 복사해서 터미널에 붙여넣기
+- 📊 **스키마/DTO 조회** - TypeScript 인터페이스 생성에 활용
+- ⚡ **동적 URL 지원** - 설정 없이 바로 URL 입력 가능
+
+---
+
+## ✨ Available Tools
+
+### 🔌 Service Management
+| Tool | Description |
+|------|-------------|
+| `swagger_select_service` | Select a service (alias from config or direct URL) |
+| `swagger_list_services` | List all configured services |
+| `swagger_get_current` | Show current service info |
+
+### 🔍 API Discovery
+| Tool | Description |
+|------|-------------|
+| `swagger_list_endpoints` | List all endpoints (filter by tag) |
+| `swagger_get_endpoint` | Get endpoint details (params, body, responses) |
+| `swagger_search` | Search endpoints by keyword |
+
+### 📊 Schema Inspection
+| Tool | Description |
+|------|-------------|
+| `swagger_get_schema` | Get schema/DTO structure |
+| `swagger_list_schemas` | List all available schemas |
+
+### 🧪 API Testing
+| Tool | Description |
+|------|-------------|
+| `swagger_test` | **Execute actual HTTP request** |
+| `swagger_curl` | **Generate cURL command** |
+
+---
+
+## 🚀 Installation
+
+```bash
+# No installation required
+npx @zerry_jin/swagger-mcp
+
+# Or install globally
+npm install -g @zerry_jin/swagger-mcp
+```
+
+---
+
+## ⚙️ Configuration
+
+### Claude Code (CLI)
+
+```bash
+# Register MCP server
+claude mcp add swagger-mcp -- npx @zerry_jin/swagger-mcp -s project
+
+# Verify
+claude mcp list
+```
+
+### Claude Desktop App
+
+Add to `claude_desktop_config.json`:
+
+<details>
+<summary>📁 Config file locations</summary>
+
+| OS | Path |
+|----|------|
+| macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
+| Linux | `~/.config/Claude/claude_desktop_config.json` |
+
+</details>
+
+```json
+{
+  "mcpServers": {
+    "swagger-mcp": {
+      "command": "npx",
+      "args": ["-y", "@zerry_jin/swagger-mcp"]
+    }
+  }
+}
+```
+
+---
+
+## 📋 Service Configuration (swagger-targets.json)
+
+Create `swagger-targets.json` in your project root for quick service switching:
+
+```json
+{
+  "auth": "http://localhost:3000/api-docs",
+  "payment": "http://localhost:3001/api-docs",
+  "order": "http://localhost:3002/api-docs",
+  "petstore": "https://petstore.swagger.io/v2/swagger.json",
+  "local": "./docs/openapi.yaml"
+}
+```
+
+Now you can switch services by name:
+```
+You: Connect to payment service
+Claude: ✅ Connected to "payment" (http://localhost:3001/api-docs)
+```
+
+### Config Search Order
+
+1. **`--config` argument** - Explicit path
+2. **`SWAGGER_MCP_CONFIG`** - Environment variable
+3. **Current working directory**
+4. **`~/.swagger-mcp/swagger-targets.json`** - Home directory
+
+> 💡 **Tip**: For Claude Desktop, use `--config` to specify your project path:
+> ```json
+> "args": ["-y", "@zerry_jin/swagger-mcp", "--config", "/path/to/project"]
+> ```
+
+---
+
+## 🎯 Quick Permission Setup
+
+### Claude Code (CLI)
+
+```bash
+# In claude, type:
+/permissions
+
+# Add to Allowed Tools:
+mcp__swagger-mcp__*
+```
+
+### Claude Desktop App
+
+Check **"Always allow requests from this server"** on first tool use.
+
+---
+
+## 💡 Usage Examples
+
+### 1️⃣ Select a Service
+
+```
+You: Connect to the petstore API
+
+Claude: [swagger_select_service name="petstore"]
+
+✅ Connected to "petstore"
+- Title: Swagger Petstore
+- Version: 1.0.0
+- Endpoints: 20
+- Tags: pet, store, user
+```
+
+### 2️⃣ List Endpoints
+
+```
+You: Show me all pet endpoints
+
+Claude: [swagger_list_endpoints tag="pet"]
+
+🏷️ 8 endpoints tagged "pet":
+| Method | Path | Summary |
+|--------|------|---------|
+| POST | /pet | Add a new pet |
+| PUT | /pet | Update a pet |
+| GET | /pet/findByStatus | Find by status |
+| GET | /pet/{petId} | Find by ID |
+| DELETE | /pet/{petId} | Delete a pet |
+...
+```
+
+### 3️⃣ Get Endpoint Details
+
+```
+You: Show me POST /pet details
+
+Claude: [swagger_get_endpoint method="post" path="/pet"]
+
+📖 POST /pet - Add a new pet to the store
+
+Request Body (application/json):
+{
+  "name": string (required),
+  "photoUrls": string[] (required),
+  "status": "available" | "pending" | "sold"
+}
+
+Responses:
+- 200: Successful
+- 405: Invalid input
+```
+
+### 4️⃣ Get Schema/DTO
+
+```
+You: Show me the Pet schema
+
+Claude: [swagger_get_schema schemaName="Pet"]
+
+📊 Pet Schema:
+{
+  "type": "object",
+  "required": ["name", "photoUrls"],
+  "properties": {
+    "id": { "type": "integer" },
+    "name": { "type": "string" },
+    "category": { "$ref": "#/definitions/Category" },
+    "photoUrls": { "type": "array", "items": { "type": "string" } },
+    "status": { "enum": ["available", "pending", "sold"] }
+  }
+}
+```
+
+### 5️⃣ Test API (🔥 No Postman Needed!)
+
+```
+You: Call GET /pet/1
+
+Claude: [swagger_test method="GET" path="/pet/{petId}" pathParams={"petId":"1"}]
+
+🧪 API Test Result:
+
+Request: GET /pet/1
+Status: 200 OK
+Duration: 127ms
+
+Response:
+{
+  "id": 1,
+  "name": "doggie",
+  "status": "available"
+}
+
+cURL:
+curl 'https://petstore.swagger.io/v2/pet/1'
+```
+
+### 6️⃣ Generate cURL
+
+```
+You: Generate curl for creating a pet
+
+Claude: [swagger_curl method="POST" path="/pet" body={...}]
+
+📋 cURL Command:
+
+curl -X POST \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "doggie",
+    "photoUrls": ["https://example.com/photo.jpg"],
+    "status": "available"
+  }' \
+  'https://petstore.swagger.io/v2/pet'
+```
+
+### 7️⃣ Switch Services
+
+```
+You: Now connect to the payment service
+
+Claude: [swagger_select_service name="payment"]
+
+✅ Switched to "payment" (http://localhost:3001/api-docs)
+- Title: Payment API
+- Endpoints: 12
+```
+
+---
+
+## 🔧 Supported Specifications
+
+| Format | Versions |
+|--------|----------|
+| OpenAPI | 3.0.x, 3.1.x |
+| Swagger | 2.0 |
+
+---
+
+## 🏗️ Architecture
+
+```
+src/
+├── index.ts                 # MCP server entry
+├── services/
+│   ├── config-loader.ts     # swagger-targets.json loader
+│   ├── swagger-parser.ts    # OpenAPI parsing
+│   └── http-client.ts       # API testing & cURL generation
+├── tools/
+│   └── swagger-tools.ts     # 10 MCP tools
+└── types/
+    └── swagger.ts           # TypeScript definitions
+```
+
+---
+
+## 📚 Documentation
+
+**[https://ongjin.github.io/swagger-mcp](https://ongjin.github.io/swagger-mcp)**
+
+- [Getting Started](https://ongjin.github.io/swagger-mcp/getting-started)
+- [Usage Guide](https://ongjin.github.io/swagger-mcp/usage)
+- [API Reference](https://ongjin.github.io/swagger-mcp/api/)
+
+---
+
+## 🤝 Contributing
+
+Contributions welcome!
+- 🐛 Bug reports
+- 💡 Feature suggestions
+- 🔧 Pull requests
+
+---
+
+## 📄 License
+
+MIT License
+
+---
+
+<a id="korean"></a>
+# 🇰🇷 한국어
+
+## Swagger MCP 서버
+
+AI와 대화하며 Swagger/OpenAPI를 탐색하고, API를 직접 테스트하세요.
+
+### 주요 기능
+
+| 도구 | 설명 |
+|------|------|
+| `swagger_select_service` | 서비스 선택 (alias 또는 URL) |
+| `swagger_list_services` | 등록된 서비스 목록 |
+| `swagger_list_endpoints` | 엔드포인트 목록 |
+| `swagger_get_endpoint` | 엔드포인트 상세 정보 |
+| `swagger_search` | 키워드 검색 |
+| `swagger_get_schema` | 스키마/DTO 구조 조회 |
+| `swagger_test` | **API 실제 호출** |
+| `swagger_curl` | **cURL 명령어 생성** |
+
+### 설치
+
+```bash
+npx @zerry_jin/swagger-mcp
+```
+
+### Claude Code 설정
+
+```bash
+claude mcp add swagger-mcp -- npx @zerry_jin/swagger-mcp -s project
+```
+
+### 서비스 설정 (swagger-targets.json)
+
+프로젝트 루트에 생성:
+
+```json
+{
+  "auth": "http://localhost:3000/api-docs",
+  "payment": "http://localhost:3001/api-docs"
+}
+```
+
+### 사용 예시
+
+```
+사용자: payment 서버 연결해줘
+Claude: ✅ "payment" 서비스에 연결되었습니다.
+
+사용자: 주문 API 목록 보여줘
+Claude: [swagger_list_endpoints 호출]
+
+사용자: POST /orders 테스트해봐
+Claude: [swagger_test 호출]
+→ Status: 201 Created
+→ Response: { "orderId": "12345" }
+
+사용자: 그거 curl로 만들어줘
+Claude: [swagger_curl 호출]
+→ curl -X POST -H 'Content-Type: application/json' ...
+```
+
+자세한 내용은 [한국어 문서](./README_ko.md)를 참조하세요.
+
+---
+
+Made with ❤️ by **zerry**

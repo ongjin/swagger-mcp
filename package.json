@@ -1,0 +1,65 @@
+{
+    "name": "@zerry_jin/swagger-mcp",
+    "version": "0.1.0",
+    "description": "MCP server for Swagger/OpenAPI with dynamic source support",
+    "type": "module",
+    "main": "./dist/index.js",
+    "bin": {
+        "swagger-mcp": "./dist/index.js"
+    },
+    "scripts": {
+        "build": "tsc",
+        "start": "node dist/index.js",
+        "dev": "tsc --watch",
+        "clean": "rm -rf dist",
+        "prepublishOnly": "npm run build",
+        "docs:api": "typedoc && rm -f docs/api/README.md 2>/dev/null; cp .api-index-template.md docs/api/index.md || true",
+        "docs:dev": "vitepress dev docs",
+        "docs:build": "npm run docs:api && vitepress build docs",
+        "docs:preview": "vitepress preview docs"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ongjin/swagger-mcp.git"
+    },
+    "keywords": [
+        "mcp",
+        "swagger",
+        "openapi",
+        "model-context-protocol",
+        "anthropic",
+        "claude",
+        "llm",
+        "ai",
+        "agent",
+        "cursor",
+        "api-tools",
+        "api-testing",
+        "dev-tools",
+        "automation",
+        "schema",
+        "typescript",
+        "backend"
+    ],
+    "author": "zerry",
+    "license": "MIT",
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "files": [
+        "dist"
+    ],
+    "dependencies": {
+        "@apidevtools/swagger-parser": "^10.1.0",
+        "@modelcontextprotocol/sdk": "^1.0.0",
+        "zod": "^3.23.8"
+    },
+    "devDependencies": {
+        "@types/node": "^22.10.2",
+        "openapi-types": "^12.1.3",
+        "typedoc": "^0.28.15",
+        "typedoc-plugin-markdown": "^4.9.0",
+        "typescript": "^5.7.2",
+        "vitepress": "^1.6.4"
+    }
+}

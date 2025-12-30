@@ -1,0 +1,96 @@
+# @author zerry
+# .gitignore configuration for swagger-mcp project
+
+# ------------------------------------------------
+# Dependencies
+# ------------------------------------------------
+# Node modules installed via npm/yarn/pnpm
+node_modules/
+.pnpm-store/
+
+# ------------------------------------------------
+# Production / Build Artifacts
+# ------------------------------------------------
+# Compiled JavaScript files (output of tsc)
+dist/
+build/
+
+# TypeScript build info file (incremental build)
+*.tsbuildinfo
+
+# ------------------------------------------------
+# Environment & Security (IMPORTANT)
+# ------------------------------------------------
+# Local environment variables - NEVER commit these
+.env
+.env.test
+.env.production
+.env.local
+
+# ------------------------------------------------
+# Logs
+# ------------------------------------------------
+# npm/yarn logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ------------------------------------------------
+# IDE & Editor Systems
+# ------------------------------------------------
+# VS Code directories
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+
+# JetBrains / IntelliJ / WebStorm
+.idea/
+
+# Vim swap files
+*.swp
+*.swo
+
+# ------------------------------------------------
+# Operating System Files
+# ------------------------------------------------
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ------------------------------------------------
+# Documentation
+# ------------------------------------------------
+# Generated TypeDoc documentation (should be deployed via CI/CD)
+# docs/
+# 1. VitePress가 빌드한 최종 웹사이트 결과물 (HTML/CSS)
+docs/.vitepress/dist/
+
+# 2. VitePress 캐시 파일
+docs/.vitepress/cache/
+
+# 3. TypeDoc이 자동으로 만들어내는 마크다운 파일들
+# (이건 CI/CD에서 매번 새로 만드니까 굳이 커밋 안 해도 됩니다)
+docs/api/
+
+# ------------------------------------------------
+# Testing
+# ------------------------------------------------
+# Coverage directory used by tools like istanbul/nyc
+coverage/
+.nyc_output/
+
+# ------------------------------------------------
+# NPM Publishing
+# ------------------------------------------------
+# Packed tarball created by npm pack
+*.tgz
+
+.claude/
+.mcp*
