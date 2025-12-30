@@ -15,7 +15,7 @@
  */
 
 import { readFileSync, existsSync, statSync } from "fs";
-import { join } from "path";
+import { join, dirname, isAbsolute, resolve } from "path";
 import { homedir } from "os";
 
 /**
@@ -47,6 +47,11 @@ let cachedTargets: SwaggerTargets | null = null;
  * Cached config path (set via initConfig)
  */
 let explicitConfigPath: string | null = null;
+
+/**
+ * Cached config directory for resolving relative paths
+ */
+let configDirectory: string | null = null;
 
 /**
  * Initializes config with explicit path from args
@@ -153,6 +158,7 @@ export function loadTargets(forceReload = false): SwaggerTargets {
     try {
         const content = readFileSync(configPath, "utf-8");
         cachedTargets = JSON.parse(content) as SwaggerTargets;
+        configDirectory = dirname(configPath);
         console.error(
             `[swagger-mcp] Loaded ${Object.keys(cachedTargets).length} service(s) from ${configPath}`
         );
@@ -197,6 +203,36 @@ export function clearCurrentSource(): void {
 }
 
 /**
+ * Checks if a path is a URL
+ */
+function isUrl(path: string): boolean {
+    return path.startsWith("http://") || path.startsWith("https://");
+}
+
+/**
+ * Resolves a relative path to absolute path based on config directory
+ */
+function resolveRelativePath(path: string): string {
+    // If it's a URL, return as-is
+    if (isUrl(path)) {
+        return path;
+    }
+
+    // If it's already absolute, return as-is
+    if (isAbsolute(path)) {
+        return path;
+    }
+
+    // If we have a config directory, resolve relative to it
+    if (configDirectory) {
+        return resolve(configDirectory, path);
+    }
+
+    // Fallback to cwd
+    return resolve(process.cwd(), path);
+}
+
+/**
  * Resolves a service name to its URL
  * First checks swagger-targets.json, then treats as direct URL
  *
@@ -213,8 +249,9 @@ export function resolveServiceUrl(nameOrUrl: string): {
 
     // Check if it's a registered alias
     if (targets[nameOrUrl]) {
+        const rawPath = targets[nameOrUrl];
         return {
-            resolved: targets[nameOrUrl],
+            resolved: resolveRelativePath(rawPath),
             isAlias: true,
             aliasName: nameOrUrl,
         };
@@ -222,7 +259,7 @@ export function resolveServiceUrl(nameOrUrl: string): {
 
     // Treat as direct URL or file path
     return {
-        resolved: nameOrUrl,
+        resolved: resolveRelativePath(nameOrUrl),
         isAlias: false,
     };
 }
