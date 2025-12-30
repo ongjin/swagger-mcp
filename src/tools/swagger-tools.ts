@@ -233,6 +233,10 @@ export const swaggerTools = {
                     type: "object",
                     description: "Additional headers (e.g., {\"Authorization\": \"Bearer token\"})",
                 },
+                baseUrl: {
+                    type: "string",
+                    description: "Override base URL (e.g., http://host.docker.internal:8080). If not provided, uses URL from swagger spec.",
+                },
             },
             required: ["method", "path"],
         },
@@ -274,6 +278,10 @@ export const swaggerTools = {
                 headers: {
                     type: "object",
                     description: "Additional headers",
+                },
+                baseUrl: {
+                    type: "string",
+                    description: "Override base URL (e.g., http://host.docker.internal:8080). If not provided, uses URL from swagger spec.",
                 },
             },
             required: ["method", "path"],
@@ -322,6 +330,7 @@ const schemas = {
         queryParams: z.record(z.string()).optional(),
         body: z.unknown().optional(),
         headers: z.record(z.string()).optional(),
+        baseUrl: z.string().optional(),
     }),
 
     swagger_curl: z.object({
@@ -331,6 +340,7 @@ const schemas = {
         queryParams: z.record(z.string()).optional(),
         body: z.unknown().optional(),
         headers: z.record(z.string()).optional(),
+        baseUrl: z.string().optional(),
     }),
 };
 
@@ -704,7 +714,8 @@ async function handleTest(args: unknown): Promise<ToolResult> {
     try {
         const doc = await swaggerParser.parse(source);
         const servers = getServers(doc);
-        const baseUrl = extractBaseUrl(servers, source);
+        // Use provided baseUrl or extract from spec
+        const baseUrl = parseResult.data.baseUrl || extractBaseUrl(servers, source);
 
         const response = await executeRequest({
             baseUrl,
@@ -758,7 +769,8 @@ async function handleCurl(args: unknown): Promise<ToolResult> {
     try {
         const doc = await swaggerParser.parse(source);
         const servers = getServers(doc);
-        const baseUrl = extractBaseUrl(servers, source);
+        // Use provided baseUrl or extract from spec
+        const baseUrl = parseResult.data.baseUrl || extractBaseUrl(servers, source);
 
         const curl = generateCurl({
             baseUrl,
