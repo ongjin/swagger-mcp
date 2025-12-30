@@ -55,6 +55,11 @@ With this MCP server:
 | `swagger_test` | **Execute actual HTTP request** |
 | `swagger_curl` | **Generate cURL command** |
 
+### 🛠️ Code Generation
+| Tool | Description |
+|------|-------------|
+| `swagger_generate_code` | **Generate TypeScript/axios code** |
+
 ---
 
 ## 🚀 Installation
@@ -122,6 +127,25 @@ Create `swagger-targets.json` in your project root for quick service switching:
   "local": "./docs/openapi.yaml"
 }
 ```
+
+### Extended Configuration with Base URL
+
+For environments like WSL/Docker where the API server URL differs from the spec URL:
+
+```json
+{
+  "core": {
+    "spec": "http://host.docker.internal:8080/v3/api-docs",
+    "baseUrl": "http://localhost:8080"
+  },
+  "payment": {
+    "spec": "./specs/payment.json",
+    "baseUrl": "http://localhost:3001"
+  }
+}
+```
+
+The `baseUrl` will be used automatically for `swagger_test` and `swagger_curl` commands.
 
 Now you can switch services by name:
 ```
@@ -292,6 +316,35 @@ Claude: [swagger_select_service name="payment"]
 - Endpoints: 12
 ```
 
+### 8️⃣ Generate TypeScript Code (🔥 New!)
+
+```
+You: Generate TypeScript code for POST /pet
+
+Claude: [swagger_generate_code method="post" path="/pet"]
+
+📝 Generated TypeScript Code:
+
+import axios, { AxiosResponse } from 'axios';
+
+interface PostPetRequest {
+  name: string;
+  photoUrls: string[];
+  status?: string;
+}
+
+/**
+ * Add a new pet to the store
+ */
+export async function postPet(data: PostPetRequest): Promise<AxiosResponse> {
+  const url = `${BASE_URL}/pet`;
+  return axios.post(url, data);
+}
+
+// Note: Define BASE_URL constant or import from config
+// const BASE_URL = 'http://localhost:8080';
+```
+
 ---
 
 ## 🔧 Supported Specifications
@@ -313,7 +366,7 @@ src/
 │   ├── swagger-parser.ts    # OpenAPI parsing
 │   └── http-client.ts       # API testing & cURL generation
 ├── tools/
-│   └── swagger-tools.ts     # 10 MCP tools
+│   └── swagger-tools.ts     # 11 MCP tools
 └── types/
     └── swagger.ts           # TypeScript definitions
 ```

@@ -1,6 +1,6 @@
 # Tools Overview
 
-Swagger MCP Server provides 10 tools organized into 4 categories.
+Swagger MCP Server provides 11 tools organized into 5 categories.
 
 ## Categories
 
@@ -42,6 +42,14 @@ Test APIs and generate cURL commands.
 | `swagger_test` | **Execute actual HTTP request** |
 | `swagger_curl` | **Generate cURL command** |
 
+### 🛠️ Code Generation
+
+Generate code from API specifications.
+
+| Tool | Description |
+|------|-------------|
+| `swagger_generate_code` | **Generate TypeScript/axios code** |
+
 ## Quick Reference
 
 ```
@@ -62,4 +70,7 @@ swagger_list_schemas    → List all schemas
 # API Testing
 swagger_test            → Execute HTTP request
 swagger_curl            → Generate cURL command
+
+# Code Generation
+swagger_generate_code   → Generate TypeScript/axios code
 ```

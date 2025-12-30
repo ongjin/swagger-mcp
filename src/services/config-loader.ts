@@ -19,12 +19,24 @@ import { join, dirname, isAbsolute, resolve } from "path";
 import { homedir } from "os";
 
 /**
+ * Service target configuration (extended format)
+ */
+export interface ServiceTarget {
+    /** Path to swagger spec file or URL */
+    spec: string;
+    /** Override base URL for API requests */
+    baseUrl?: string;
+}
+
+/**
  * Type definition for swagger targets configuration
- * Key is the service alias, value is the URL or file path
+ * Key is the service alias, value is either:
+ * - string: URL or file path to swagger spec
+ * - ServiceTarget: Extended config with spec and baseUrl
  *
  * @author zerry
  */
-export type SwaggerTargets = Record<string, string>;
+export type SwaggerTargets = Record<string, string | ServiceTarget>;
 
 /**
  * Default configuration file name
@@ -37,6 +49,11 @@ const CONFIG_FILE_NAME = "swagger-targets.json";
  * @author zerry
  */
 let currentSource: string | null = null;
+
+/**
+ * Global state for current base URL override
+ */
+let currentBaseUrl: string | null = null;
 
 /**
  * Cached targets configuration
@@ -200,6 +217,27 @@ export function setCurrentSource(source: string): void {
  */
 export function clearCurrentSource(): void {
     currentSource = null;
+    currentBaseUrl = null;
+}
+
+/**
+ * Gets the current base URL override
+ *
+ * @author zerry
+ * @returns Current base URL or null if not set
+ */
+export function getCurrentBaseUrl(): string | null {
+    return currentBaseUrl;
+}
+
+/**
+ * Sets the current base URL override
+ *
+ * @author zerry
+ * @param baseUrl - Base URL to use for API requests
+ */
+export function setCurrentBaseUrl(baseUrl: string | null): void {
+    currentBaseUrl = baseUrl;
 }
 
 /**
@@ -233,28 +271,48 @@ function resolveRelativePath(path: string): string {
 }
 
 /**
+ * Checks if a target config is an object (ServiceTarget) or string
+ */
+function isServiceTarget(target: string | ServiceTarget): target is ServiceTarget {
+    return typeof target === "object" && target !== null && "spec" in target;
+}
+
+/**
  * Resolves a service name to its URL
  * First checks swagger-targets.json, then treats as direct URL
  *
  * @author zerry
  * @param nameOrUrl - Service alias or direct URL
- * @returns Resolved URL or file path
+ * @returns Resolved URL or file path, and optional baseUrl
  */
 export function resolveServiceUrl(nameOrUrl: string): {
     resolved: string;
     isAlias: boolean;
     aliasName?: string | undefined;
+    baseUrl?: string | undefined;
 } {
     const targets = loadTargets();
 
     // Check if it's a registered alias
     if (targets[nameOrUrl]) {
-        const rawPath = targets[nameOrUrl];
-        return {
-            resolved: resolveRelativePath(rawPath),
-            isAlias: true,
-            aliasName: nameOrUrl,
-        };
+        const target = targets[nameOrUrl];
+
+        if (isServiceTarget(target)) {
+            // Extended format: { spec: "...", baseUrl: "..." }
+            return {
+                resolved: resolveRelativePath(target.spec),
+                isAlias: true,
+                aliasName: nameOrUrl,
+                baseUrl: target.baseUrl,
+            };
+        } else {
+            // Simple format: "..."
+            return {
+                resolved: resolveRelativePath(target),
+                isAlias: true,
+                aliasName: nameOrUrl,
+            };
+        }
     }
 
     // Treat as direct URL or file path
@@ -268,11 +326,23 @@ export function resolveServiceUrl(nameOrUrl: string): {
  * Lists all available service aliases
  *
  * @author zerry
- * @returns Array of service entries with alias and URL
+ * @returns Array of service entries with alias, spec URL, and optional baseUrl
  */
-export function listServices(): Array<{ alias: string; url: string }> {
+export function listServices(): Array<{ alias: string; spec: string; baseUrl?: string }> {
     const targets = loadTargets();
-    return Object.entries(targets).map(([alias, url]) => ({ alias, url }));
+    return Object.entries(targets).map(([alias, target]) => {
+        if (isServiceTarget(target)) {
+            const result: { alias: string; spec: string; baseUrl?: string } = {
+                alias,
+                spec: target.spec,
+            };
+            if (target.baseUrl !== undefined) {
+                result.baseUrl = target.baseUrl;
+            }
+            return result;
+        }
+        return { alias, spec: target };
+    });
 }
 
 /**

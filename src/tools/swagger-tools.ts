@@ -13,6 +13,8 @@ import {
     swaggerParser,
     getCurrentSource,
     setCurrentSource,
+    getCurrentBaseUrl,
+    setCurrentBaseUrl,
     resolveServiceUrl,
     listServices,
     reloadConfig,
@@ -287,6 +289,42 @@ export const swaggerTools = {
             required: ["method", "path"],
         },
     },
+
+    /**
+     * Tool: swagger_generate_code
+     * Generates TypeScript/axios code for an endpoint
+     */
+    swagger_generate_code: {
+        name: "swagger_generate_code",
+        description:
+            "Generates TypeScript code with axios for calling an API endpoint. " +
+            "Includes request/response interfaces and async function.",
+        inputSchema: {
+            type: "object" as const,
+            properties: {
+                method: {
+                    type: "string",
+                    enum: ["get", "post", "put", "delete", "patch"],
+                    description: "HTTP method",
+                },
+                path: {
+                    type: "string",
+                    description: "Endpoint path (e.g., /users/{id})",
+                },
+                language: {
+                    type: "string",
+                    enum: ["typescript", "javascript"],
+                    description: "Output language. Default: typescript",
+                },
+                httpClient: {
+                    type: "string",
+                    enum: ["axios", "fetch"],
+                    description: "HTTP client to use. Default: axios",
+                },
+            },
+            required: ["method", "path"],
+        },
+    },
 } as const;
 
 // ============================================================================
@@ -342,6 +380,13 @@ const schemas = {
         headers: z.record(z.string()).optional(),
         baseUrl: z.string().optional(),
     }),
+
+    swagger_generate_code: z.object({
+        method: z.enum(["get", "post", "put", "delete", "patch"]),
+        path: z.string().min(1, "Path is required"),
+        language: z.enum(["typescript", "javascript"]).optional().default("typescript"),
+        httpClient: z.enum(["axios", "fetch"]).optional().default("axios"),
+    }),
 };
 
 // ============================================================================
@@ -390,7 +435,7 @@ async function handleSelectService(args: unknown): Promise<ToolResult> {
     }
 
     const { name } = parseResult.data;
-    const { resolved, isAlias, aliasName } = resolveServiceUrl(name);
+    const { resolved, isAlias, aliasName, baseUrl } = resolveServiceUrl(name);
 
     try {
         // Validate the source by parsing it
@@ -400,6 +445,9 @@ async function handleSelectService(args: unknown): Promise<ToolResult> {
         // Set as current source
         setCurrentSource(resolved);
 
+        // Set baseUrl if configured in swagger-targets.json
+        setCurrentBaseUrl(baseUrl ?? null);
+
         return successResult({
             message: isAlias
                 ? `Connected to "${aliasName}" service`
@@ -407,6 +455,7 @@ async function handleSelectService(args: unknown): Promise<ToolResult> {
             source: resolved,
             isAlias,
             aliasName: aliasName ?? null,
+            baseUrl: baseUrl ?? null,
             api: {
                 title: summary.title,
                 version: summary.version,
@@ -464,9 +513,11 @@ async function handleGetCurrent(_args: unknown): Promise<ToolResult> {
     try {
         const doc = await swaggerParser.parse(source);
         const summary = swaggerParser.getSummary(doc);
+        const baseUrl = getCurrentBaseUrl();
 
         return successResult({
             source,
+            baseUrl: baseUrl ?? null,
             ...summary,
         });
     } catch (error) {
@@ -714,8 +765,8 @@ async function handleTest(args: unknown): Promise<ToolResult> {
     try {
         const doc = await swaggerParser.parse(source);
         const servers = getServers(doc);
-        // Use provided baseUrl or extract from spec
-        const baseUrl = parseResult.data.baseUrl || extractBaseUrl(servers, source);
+        // Priority: 1. provided baseUrl, 2. stored baseUrl from config, 3. extract from spec
+        const baseUrl = parseResult.data.baseUrl || getCurrentBaseUrl() || extractBaseUrl(servers, source);
 
         const response = await executeRequest({
             baseUrl,
@@ -769,8 +820,8 @@ async function handleCurl(args: unknown): Promise<ToolResult> {
     try {
         const doc = await swaggerParser.parse(source);
         const servers = getServers(doc);
-        // Use provided baseUrl or extract from spec
-        const baseUrl = parseResult.data.baseUrl || extractBaseUrl(servers, source);
+        // Priority: 1. provided baseUrl, 2. stored baseUrl from config, 3. extract from spec
+        const baseUrl = parseResult.data.baseUrl || getCurrentBaseUrl() || extractBaseUrl(servers, source);
 
         const curl = generateCurl({
             baseUrl,
@@ -789,6 +840,271 @@ async function handleCurl(args: unknown): Promise<ToolResult> {
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         return errorResult(`Failed to generate cURL: ${message}`);
+    }
+}
+
+/**
+ * Converts a schema to TypeScript type string
+ *
+ * @author zerry
+ */
+function schemaToTypeScript(schema: unknown, isTypescript: boolean): string {
+    if (!schema || typeof schema !== "object") {
+        return isTypescript ? "unknown" : "";
+    }
+
+    const s = schema as Record<string, unknown>;
+    const type = s["type"] as string | undefined;
+
+    if (s["$ref"]) {
+        const ref = s["$ref"] as string;
+        const name = ref.split("/").pop() ?? "unknown";
+        return name;
+    }
+
+    if (type === "string") return "string";
+    if (type === "integer" || type === "number") return "number";
+    if (type === "boolean") return "boolean";
+    if (type === "array") {
+        const items = s["items"];
+        return `${schemaToTypeScript(items, isTypescript)}[]`;
+    }
+    if (type === "object" || s["properties"]) {
+        const props = s["properties"] as Record<string, unknown> | undefined;
+        if (!props) return isTypescript ? "Record<string, unknown>" : "object";
+
+        const required = (s["required"] as string[]) ?? [];
+        const entries = Object.entries(props).map(([key, val]) => {
+            const optional = !required.includes(key) ? "?" : "";
+            const propType = schemaToTypeScript(val, isTypescript);
+            return `  ${key}${optional}: ${propType};`;
+        });
+        return `{\n${entries.join("\n")}\n}`;
+    }
+
+    return isTypescript ? "unknown" : "any";
+}
+
+/**
+ * Converts path to camelCase function name
+ */
+function pathToFunctionName(method: string, path: string): string {
+    const cleanPath = path
+        .replace(/\{([^}]+)\}/g, "By$1")
+        .replace(/[^a-zA-Z0-9]/g, " ")
+        .trim()
+        .split(/\s+/)
+        .map((word, i) => {
+            if (i === 0) return word.toLowerCase();
+            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        })
+        .join("");
+
+    return method.toLowerCase() + cleanPath.charAt(0).toUpperCase() + cleanPath.slice(1);
+}
+
+/**
+ * Handles swagger_generate_code tool
+ *
+ * @author zerry
+ */
+async function handleGenerateCode(args: unknown): Promise<ToolResult> {
+    const source = requireSource();
+    if (!source) {
+        return errorResult(
+            "No service selected. Use swagger_select_service first."
+        );
+    }
+
+    const parseResult = schemas.swagger_generate_code.safeParse(args);
+    if (!parseResult.success) {
+        return errorResult(parseResult.error.message);
+    }
+
+    const { method, path, language, httpClient } = parseResult.data;
+    const isTypescript = language === "typescript";
+
+    try {
+        const doc = await swaggerParser.parse(source);
+        const detail = swaggerParser.getEndpointDetail(
+            doc,
+            method as HttpMethod,
+            path
+        );
+
+        if (!detail) {
+            return errorResult(
+                `Endpoint not found: ${method.toUpperCase()} ${path}`
+            );
+        }
+
+        // Filter parameters by location
+        const pathParams = detail.parameters?.filter(p => p.in === "path") ?? [];
+        const queryParams = detail.parameters?.filter(p => p.in === "query") ?? [];
+
+        const funcName = pathToFunctionName(method, path);
+        const lines: string[] = [];
+
+        // Generate imports
+        if (httpClient === "axios") {
+            lines.push(isTypescript
+                ? "import axios, { AxiosResponse } from 'axios';"
+                : "import axios from 'axios';");
+        }
+        lines.push("");
+
+        // Generate request interface for TypeScript
+        if (isTypescript) {
+            // Path params interface
+            if (pathParams.length > 0) {
+                lines.push(`interface ${funcName.charAt(0).toUpperCase() + funcName.slice(1)}PathParams {`);
+                for (const param of pathParams) {
+                    const paramType = param.type ?? "string";
+                    const tsType = paramType === "integer" ? "number" : paramType;
+                    lines.push(`  ${param.name}: ${tsType};`);
+                }
+                lines.push("}");
+                lines.push("");
+            }
+
+            // Query params interface
+            if (queryParams.length > 0) {
+                lines.push(`interface ${funcName.charAt(0).toUpperCase() + funcName.slice(1)}QueryParams {`);
+                for (const param of queryParams) {
+                    const required = param.required === true ? "" : "?";
+                    const paramType = param.type ?? "string";
+                    const tsType = paramType === "integer" ? "number" : paramType;
+                    lines.push(`  ${param.name}${required}: ${tsType};`);
+                }
+                lines.push("}");
+                lines.push("");
+            }
+
+            // Request body interface
+            if (detail.requestBody) {
+                const rb = detail.requestBody as Record<string, unknown>;
+                const content = rb["content"] as Record<string, unknown> | undefined;
+                if (content) {
+                    const jsonContent = content["application/json"] as Record<string, unknown> | undefined;
+                    if (jsonContent?.["schema"]) {
+                        const bodyType = schemaToTypeScript(jsonContent["schema"], true);
+                        lines.push(`interface ${funcName.charAt(0).toUpperCase() + funcName.slice(1)}Request ${bodyType}`);
+                        lines.push("");
+                    }
+                }
+            }
+
+            // Response interface
+            if (detail.responses) {
+                const responses = detail.responses as Record<string, unknown>;
+                const successResponse = responses["200"] ?? responses["201"] ?? responses["default"];
+                if (successResponse) {
+                    const sr = successResponse as Record<string, unknown>;
+                    const content = sr["content"] as Record<string, unknown> | undefined;
+                    if (content) {
+                        const jsonContent = content["application/json"] as Record<string, unknown> | undefined;
+                        if (jsonContent?.["schema"]) {
+                            const responseType = schemaToTypeScript(jsonContent["schema"], true);
+                            lines.push(`interface ${funcName.charAt(0).toUpperCase() + funcName.slice(1)}Response ${responseType}`);
+                            lines.push("");
+                        }
+                    }
+                }
+            }
+        }
+
+        // Build function parameters
+        const params: string[] = [];
+        const hasPathParams = pathParams.length > 0;
+        const hasQueryParams = queryParams.length > 0;
+        const hasBody = ["post", "put", "patch"].includes(method);
+
+        if (hasPathParams) {
+            const paramType = isTypescript ? `: ${funcName.charAt(0).toUpperCase() + funcName.slice(1)}PathParams` : "";
+            params.push(`pathParams${paramType}`);
+        }
+        if (hasQueryParams) {
+            const paramType = isTypescript ? `: ${funcName.charAt(0).toUpperCase() + funcName.slice(1)}QueryParams` : "";
+            params.push(`queryParams${paramType}`);
+        }
+        if (hasBody) {
+            const paramType = isTypescript ? `: ${funcName.charAt(0).toUpperCase() + funcName.slice(1)}Request` : "";
+            params.push(`data${paramType}`);
+        }
+
+        // Generate function
+        const returnType = isTypescript ? `: Promise<AxiosResponse>` : "";
+        lines.push(`/**`);
+        lines.push(` * ${detail.summary ?? `${method.toUpperCase()} ${path}`}`);
+        if (detail.description) {
+            lines.push(` * ${detail.description}`);
+        }
+        lines.push(` */`);
+        lines.push(`export async function ${funcName}(${params.join(", ")})${returnType} {`);
+
+        // Build URL
+        let urlPath = path;
+        if (hasPathParams) {
+            urlPath = path.replace(/\{([^}]+)\}/g, "${pathParams.$1}");
+            lines.push(`  const url = \`\${BASE_URL}${urlPath}\`;`);
+        } else {
+            lines.push(`  const url = \`\${BASE_URL}${path}\`;`);
+        }
+
+        // Generate axios call
+        if (httpClient === "axios") {
+            const axiosConfig: string[] = [];
+            if (hasQueryParams) {
+                axiosConfig.push("params: queryParams");
+            }
+
+            if (hasBody) {
+                if (axiosConfig.length > 0) {
+                    lines.push(`  return axios.${method}(url, data, { ${axiosConfig.join(", ")} });`);
+                } else {
+                    lines.push(`  return axios.${method}(url, data);`);
+                }
+            } else {
+                if (axiosConfig.length > 0) {
+                    lines.push(`  return axios.${method}(url, { ${axiosConfig.join(", ")} });`);
+                } else {
+                    lines.push(`  return axios.${method}(url);`);
+                }
+            }
+        } else {
+            // Fetch client
+            const fetchOptions: string[] = [`method: '${method.toUpperCase()}'`];
+            if (hasBody) {
+                fetchOptions.push("headers: { 'Content-Type': 'application/json' }");
+                fetchOptions.push("body: JSON.stringify(data)");
+            }
+
+            if (hasQueryParams) {
+                lines.push(`  const params = new URLSearchParams(queryParams${isTypescript ? " as Record<string, string>" : ""});`);
+                lines.push(`  return fetch(\`\${url}?\${params}\`, {`);
+            } else {
+                lines.push(`  return fetch(url, {`);
+            }
+            lines.push(`    ${fetchOptions.join(",\n    ")}`);
+            lines.push(`  });`);
+        }
+
+        lines.push("}");
+
+        // Add BASE_URL constant hint
+        lines.push("");
+        lines.push("// Note: Define BASE_URL constant or import from config");
+        lines.push("// const BASE_URL = 'http://localhost:8080';");
+
+        return successResult({
+            code: lines.join("\n"),
+            endpoint: `${method.toUpperCase()} ${path}`,
+            language,
+            httpClient,
+        });
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        return errorResult(`Failed to generate code: ${message}`);
     }
 }
 
@@ -815,4 +1131,5 @@ export const toolHandlers: Record<
     swagger_list_schemas: handleListSchemas,
     swagger_test: handleTest,
     swagger_curl: handleCurl,
+    swagger_generate_code: handleGenerateCode,
 };

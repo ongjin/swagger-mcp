@@ -55,6 +55,11 @@ MSA 환경에서 여러 서비스의 API 문서를 오가며 개발하는 것은
 | `swagger_test` | **실제 HTTP 요청 실행** |
 | `swagger_curl` | **cURL 명령어 생성** |
 
+### 🛠️ 코드 생성
+| 도구 | 설명 |
+|------|------|
+| `swagger_generate_code` | **TypeScript/axios 코드 생성** |
+
 ---
 
 ## 🚀 설치
@@ -122,6 +127,25 @@ claude mcp list
   "local": "./docs/openapi.yaml"
 }
 ```
+
+### baseUrl 확장 설정
+
+WSL/Docker 환경처럼 API 서버 URL이 스펙 URL과 다른 경우:
+
+```json
+{
+  "core": {
+    "spec": "http://host.docker.internal:8080/v3/api-docs",
+    "baseUrl": "http://localhost:8080"
+  },
+  "payment": {
+    "spec": "./specs/payment.json",
+    "baseUrl": "http://localhost:3001"
+  }
+}
+```
+
+`baseUrl`은 `swagger_test`와 `swagger_curl` 명령에서 자동으로 사용됩니다.
 
 이제 이름으로 서비스를 전환할 수 있습니다:
 ```
@@ -292,6 +316,35 @@ Claude: [swagger_select_service name="payment"]
 - 엔드포인트: 12개
 ```
 
+### 8️⃣ TypeScript 코드 생성 (🔥 New!)
+
+```
+사용자: POST /pet 타입스크립트 코드 생성해줘
+
+Claude: [swagger_generate_code method="post" path="/pet"]
+
+📝 생성된 TypeScript 코드:
+
+import axios, { AxiosResponse } from 'axios';
+
+interface PostPetRequest {
+  name: string;
+  photoUrls: string[];
+  status?: string;
+}
+
+/**
+ * 스토어에 새 펫 추가
+ */
+export async function postPet(data: PostPetRequest): Promise<AxiosResponse> {
+  const url = `${BASE_URL}/pet`;
+  return axios.post(url, data);
+}
+
+// Note: BASE_URL 상수를 정의하거나 설정에서 import하세요
+// const BASE_URL = 'http://localhost:8080';
+```
+
 ---
 
 ## 🔧 지원 스펙
@@ -313,7 +366,7 @@ src/
 │   ├── swagger-parser.ts    # OpenAPI 파싱
 │   └── http-client.ts       # API 테스트 & cURL 생성
 ├── tools/
-│   └── swagger-tools.ts     # 10개 MCP 도구
+│   └── swagger-tools.ts     # 11개 MCP 도구
 └── types/
     └── swagger.ts           # TypeScript 타입 정의
 ```

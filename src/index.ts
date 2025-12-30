@@ -182,7 +182,8 @@ function logStartup(): void {
     console.error("   ├─ swagger_get_schema      : Get schema/DTO structure");
     console.error("   ├─ swagger_list_schemas    : List all schemas");
     console.error("   ├─ swagger_test            : Execute API request");
-    console.error("   └─ swagger_curl            : Generate cURL command");
+    console.error("   ├─ swagger_curl            : Generate cURL command");
+    console.error("   └─ swagger_generate_code   : Generate TypeScript/axios code");
     console.error("");
     console.error("💡 Start by selecting a service:");
     console.error('   "Connect to auth service" or "Use https://api.example.com/docs"');

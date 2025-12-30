@@ -93,6 +93,25 @@ Claude Desktop 설정 파일에 다음을 추가하세요:
 }
 ```
 
+### baseUrl 확장 설정
+
+WSL/Docker 환경처럼 API 서버 URL이 스펙 URL과 다른 경우, 확장 형식을 사용하세요:
+
+```json
+{
+  "core": {
+    "spec": "http://host.docker.internal:8080/v3/api-docs",
+    "baseUrl": "http://localhost:8080"
+  },
+  "payment": {
+    "spec": "./specs/payment.json",
+    "baseUrl": "http://localhost:3001"
+  }
+}
+```
+
+`baseUrl`은 `swagger_test`와 `swagger_curl` 명령에서 자동으로 사용됩니다.
+
 이제 이름으로 서비스를 전환할 수 있습니다:
 ```
 사용자: payment 서비스에 연결해줘

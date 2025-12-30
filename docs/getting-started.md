@@ -93,6 +93,25 @@ Create `swagger-targets.json` in your project root for quick service switching:
 }
 ```
 
+### Extended Configuration with Base URL
+
+For environments like WSL/Docker where the API server URL differs from the spec URL, use the extended format:
+
+```json
+{
+  "core": {
+    "spec": "http://host.docker.internal:8080/v3/api-docs",
+    "baseUrl": "http://localhost:8080"
+  },
+  "payment": {
+    "spec": "./specs/payment.json",
+    "baseUrl": "http://localhost:3001"
+  }
+}
+```
+
+The `baseUrl` will be used automatically for `swagger_test` and `swagger_curl` commands.
+
 Now you can switch services by name:
 ```
 You: Connect to payment service
