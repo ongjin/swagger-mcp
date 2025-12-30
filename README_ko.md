@@ -324,9 +324,10 @@ src/
 
 **[https://ongjin.github.io/swagger-mcp](https://ongjin.github.io/swagger-mcp)**
 
-- [시작하기](https://ongjin.github.io/swagger-mcp/getting-started)
-- [사용 가이드](https://ongjin.github.io/swagger-mcp/usage)
-- [API 레퍼런스](https://ongjin.github.io/swagger-mcp/api/)
+- [시작하기](https://ongjin.github.io/swagger-mcp/ko/getting-started)
+- [도구 레퍼런스](https://ongjin.github.io/swagger-mcp/ko/tools/)
+- [예제 & 모범 사례](https://ongjin.github.io/swagger-mcp/ko/examples)
+- [API 명세](https://ongjin.github.io/swagger-mcp/ko/api/)
 
 ---
 

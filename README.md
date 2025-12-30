@@ -1,6 +1,6 @@
 # 🔌 Swagger MCP Server
 
-AI와 대화하며 Swagger/OpenAPI를 탐색하고, API를 직접 테스트하세요. Postman 없이 채팅만으로 API 개발이 가능합니다.
+Chat with AI to explore Swagger/OpenAPI and test APIs directly. API development through chat, no Postman needed.
 
 [![npm version](https://img.shields.io/npm/v/@zerry_jin/swagger-mcp)](https://www.npmjs.com/package/@zerry_jin/swagger-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/@zerry_jin/swagger-mcp)](https://www.npmjs.com/package/@zerry_jin/swagger-mcp)
@@ -10,20 +10,20 @@ AI와 대화하며 Swagger/OpenAPI를 탐색하고, API를 직접 테스트하�
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Node](https://img.shields.io/badge/node-%3E%3D18-green)
 
-**[한국어](#korean)** | **[📚 Documentation](https://ongjin.github.io/swagger-mcp)**
+**[한국어](./README_ko.md)** | **[📚 Documentation](https://ongjin.github.io/swagger-mcp)**
 
 ---
 
 ## Why?
 
-MSA 환경에서 여러 서비스의 API 문서를 오가며 개발하는 것은 번거롭습니다.
+Navigating between multiple API docs in MSA environments is tedious.
 
-이 MCP 서버를 사용하면:
-- 🔄 **서비스 전환이 자유로움** - 채팅으로 "payment 서버 연결해줘"
-- 🧪 **API 직접 테스트** - Postman 없이 채팅에서 바로 호출
-- 📋 **cURL 자동 생성** - 복사해서 터미널에 붙여넣기
-- 📊 **스키마/DTO 조회** - TypeScript 인터페이스 생성에 활용
-- ⚡ **동적 URL 지원** - 설정 없이 바로 URL 입력 가능
+With this MCP server:
+- 🔄 **Seamless service switching** - Just say "connect to payment server"
+- 🧪 **Direct API testing** - Call APIs right from chat, no Postman needed
+- 📋 **Auto-generate cURL** - Copy and paste to terminal
+- 📊 **Schema/DTO inspection** - Use for TypeScript interface generation
+- ⚡ **Dynamic URL support** - Enter URLs directly without config
 
 ---
 
@@ -325,7 +325,8 @@ src/
 **[https://ongjin.github.io/swagger-mcp](https://ongjin.github.io/swagger-mcp)**
 
 - [Getting Started](https://ongjin.github.io/swagger-mcp/getting-started)
-- [Usage Guide](https://ongjin.github.io/swagger-mcp/usage)
+- [Tools Reference](https://ongjin.github.io/swagger-mcp/tools/)
+- [Examples & Best Practices](https://ongjin.github.io/swagger-mcp/examples)
 - [API Reference](https://ongjin.github.io/swagger-mcp/api/)
 
 ---
@@ -342,72 +343,6 @@ Contributions welcome!
 ## 📄 License
 
 MIT License
-
----
-
-<a id="korean"></a>
-# 🇰🇷 한국어
-
-## Swagger MCP 서버
-
-AI와 대화하며 Swagger/OpenAPI를 탐색하고, API를 직접 테스트하세요.
-
-### 주요 기능
-
-| 도구 | 설명 |
-|------|------|
-| `swagger_select_service` | 서비스 선택 (alias 또는 URL) |
-| `swagger_list_services` | 등록된 서비스 목록 |
-| `swagger_list_endpoints` | 엔드포인트 목록 |
-| `swagger_get_endpoint` | 엔드포인트 상세 정보 |
-| `swagger_search` | 키워드 검색 |
-| `swagger_get_schema` | 스키마/DTO 구조 조회 |
-| `swagger_test` | **API 실제 호출** |
-| `swagger_curl` | **cURL 명령어 생성** |
-
-### 설치
-
-```bash
-npx @zerry_jin/swagger-mcp
-```
-
-### Claude Code 설정
-
-```bash
-claude mcp add swagger-mcp -- npx @zerry_jin/swagger-mcp -s project
-```
-
-### 서비스 설정 (swagger-targets.json)
-
-프로젝트 루트에 생성:
-
-```json
-{
-  "auth": "http://localhost:3000/api-docs",
-  "payment": "http://localhost:3001/api-docs"
-}
-```
-
-### 사용 예시
-
-```
-사용자: payment 서버 연결해줘
-Claude: ✅ "payment" 서비스에 연결되었습니다.
-
-사용자: 주문 API 목록 보여줘
-Claude: [swagger_list_endpoints 호출]
-
-사용자: POST /orders 테스트해봐
-Claude: [swagger_test 호출]
-→ Status: 201 Created
-→ Response: { "orderId": "12345" }
-
-사용자: 그거 curl로 만들어줘
-Claude: [swagger_curl 호출]
-→ curl -X POST -H 'Content-Type: application/json' ...
-```
-
-자세한 내용은 [한국어 문서](./README_ko.md)를 참조하세요.
 
 ---
 
