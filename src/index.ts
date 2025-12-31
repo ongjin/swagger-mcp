@@ -31,8 +31,11 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import {
     CallToolRequestSchema,
     ListToolsRequestSchema,
+    ListResourcesRequestSchema,
+    ReadResourceRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { swaggerTools, toolHandlers } from "./tools/index.js";
+import { swaggerResources, readResource } from "./resources/index.js";
 import { loadTargets, initConfig } from "./services/index.js";
 
 /**
@@ -111,6 +114,7 @@ function createServer(): Server {
         {
             capabilities: {
                 tools: {},
+                resources: {},
             },
         }
     );
@@ -140,6 +144,27 @@ function createServer(): Server {
         }
 
         return handler(args);
+    });
+
+    // Register ListResources handler
+    server.setRequestHandler(ListResourcesRequestSchema, async () => {
+        return {
+            resources: swaggerResources,
+        };
+    });
+
+    // Register ReadResource handler
+    server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+        const { uri } = request.params;
+
+        const content = await readResource(uri);
+        if (!content) {
+            throw new Error(`Resource not found: ${uri}`);
+        }
+
+        return {
+            contents: [content],
+        };
     });
 
     return server;
@@ -184,6 +209,12 @@ function logStartup(): void {
     console.error("   ├─ swagger_test            : Execute API request");
     console.error("   ├─ swagger_curl            : Generate cURL command");
     console.error("   └─ swagger_generate_code   : Generate TypeScript/axios code");
+    console.error("");
+    console.error("📦 Available Resources:");
+    console.error("   ├─ swagger://services          : List of configured services");
+    console.error("   ├─ swagger://current/info      : Current service information");
+    console.error("   ├─ swagger://current/endpoints : Current service endpoints");
+    console.error("   └─ swagger://current/schemas   : Current service schemas");
     console.error("");
     console.error("💡 Start by selecting a service:");
     console.error('   "Connect to auth service" or "Use https://api.example.com/docs"');

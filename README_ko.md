@@ -62,6 +62,21 @@ MSA 환경에서 여러 서비스의 API 문서를 오가며 개발하는 것은
 
 ---
 
+## 📦 사용 가능한 리소스
+
+리소스는 Claude가 컨텍스트로 접근할 수 있는 읽기 전용 데이터입니다.
+
+| 리소스 URI | 설명 |
+|------------|------|
+| `swagger://services` | 등록된 서비스 목록 |
+| `swagger://current/info` | 현재 서비스 정보 |
+| `swagger://current/endpoints` | 현재 서비스의 모든 엔드포인트 |
+| `swagger://current/schemas` | 현재 서비스의 모든 스키마/DTO |
+
+> 💡 **Tip**: Claude Desktop에서 `@`를 사용하여 리소스를 메시지에 첨부할 수 있습니다.
+
+---
+
 ## 🚀 설치
 
 ```bash

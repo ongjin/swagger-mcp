@@ -87,6 +87,7 @@ export default defineConfig({
                     { text: "Home", link: "/" },
                     { text: "Getting Started", link: "/getting-started" },
                     { text: "Tools", link: "/tools/" },
+                    { text: "Resources", link: "/resources" },
                     { text: "Examples", link: "/examples" },
                     { text: "API Reference", link: "/api/" },
                 ],
@@ -109,6 +110,13 @@ export default defineConfig({
                                 { text: "Schema Inspection", link: "/tools/schema-inspection" },
                                 { text: "API Testing", link: "/tools/api-testing" },
                                 { text: "Code Generation", link: "/tools/code-generation" },
+                            ],
+                        },
+                        {
+                            text: "Resources",
+                            collapsed: false,
+                            items: [
+                                { text: "MCP Resources", link: "/resources" },
                             ],
                         },
                         {
@@ -145,6 +153,7 @@ export default defineConfig({
                     { text: "홈", link: "/ko/" },
                     { text: "시작하기", link: "/ko/getting-started" },
                     { text: "도구", link: "/ko/tools/" },
+                    { text: "리소스", link: "/ko/resources" },
                     { text: "예제", link: "/ko/examples" },
                     { text: "API 명세", link: "/ko/api/" },
                 ],
@@ -167,6 +176,13 @@ export default defineConfig({
                                 { text: "스키마 조회", link: "/ko/tools/schema-inspection" },
                                 { text: "API 테스트", link: "/ko/tools/api-testing" },
                                 { text: "코드 생성", link: "/ko/tools/code-generation" },
+                            ],
+                        },
+                        {
+                            text: "리소스",
+                            collapsed: false,
+                            items: [
+                                { text: "MCP 리소스", link: "/ko/resources" },
                             ],
                         },
                         {

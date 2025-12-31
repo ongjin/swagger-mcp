@@ -62,6 +62,21 @@ With this MCP server:
 
 ---
 
+## 📦 Available Resources
+
+Resources provide read-only data that Claude can access as context.
+
+| Resource URI | Description |
+|--------------|-------------|
+| `swagger://services` | List of configured services |
+| `swagger://current/info` | Current service information |
+| `swagger://current/endpoints` | All endpoints from current service |
+| `swagger://current/schemas` | All schemas/DTOs from current service |
+
+> 💡 **Tip**: In Claude Desktop, use `@` to attach resources to your message for context.
+
+---
+
 ## 🚀 Installation
 
 ```bash
